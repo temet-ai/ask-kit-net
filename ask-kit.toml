@@ -1,0 +1,37 @@
+id = "temet.net"
+name = "net"
+version = "0.1.0"
+min_ask_kit = "0.3.0"
+says = "the network as seen from this machine: what a host name resolves to (A, AAAA, MX, TXT, reverse names) and whether this machine and DNS agree, whether a named host and port answer, what a URL returns (status, redirect chain, headers, timing split into DNS, connect, TLS and first byte), when a TLS certificate expires, who issued it and whether it covers the name, and why a URL or host cannot be reached (refused, timed out, does not resolve, certificate rejected, proxy in the way); and sending a request that changes something (POST, PUT, PATCH, DELETE)"
+keywords = ["dns", "nslookup", "\\bdig\\b", "resolves?( to)?", "ip address of", "a records?", "mx records?", "txt records?", "cname", "ssl", "tls", "certificates?", "certs?", "expires?", "expiry", "http status", "status code", "redirects?", "redirect chain", "response headers?", "curl", "ECONNREFUSED", "ENOTFOUND", "ETIMEDOUT", "EAI_AGAIN", "connection (refused|timed out|reset)", "(can.?t|cannot|unable to|why (is|can.?t)) \\S* ?reach", "reachable", "unreachable", "does \\S+ answer", "latency", "time to first byte", "ttfb", "proxy"]
+route_hint = "whether a name resolves, a host and port answer, what a URL returns (status, redirects, headers, timing), a TLS certificate's expiry and issuer, and why something cannot be reached are net; which process holds a local port or what is listening on it is procs; what a web page or documentation site says is web; what a page looks like or does when a browser loads it is browser; whether one of this machine's services runs, and its logs, is ops or systemd; container ports are docker; what a past session found out about the network is sessions"
+cite = "the host or URL asked about, the step that answered or failed (dns, tcp, tls, http) with its status or error code, and for a certificate its subject, issuer and validTo date"
+instructions = "instructions.md"
+scripts = "scripts"
+bench = "bench/questions.json"
+acts = ["an HTTP request with a method other than GET, HEAD or OPTIONS (POST, PUT, PATCH, DELETE)"]
+
+[[settings]]
+key = "WORKDIR"
+about = "the folder certificate files named by a relative path are read from; by default the folder the agent runs in"
+detect = ["node", "-e", "process.stdout.write(process.cwd())"]
+
+[[sources]]
+kind = "module"
+name = "net"
+module = "net.mjs"
+api = "api.d.ts"
+
+[[actions]]
+name = "cert"
+title = "When a certificate expires and who issued it"
+script = "cert"
+match = ['when does the (?:tls |ssl )?cert(?:ificate)? (?:for|of|on) (?<host>[a-z0-9][a-z0-9.-]*\.[a-z]{2,}) expire', 'when does (?<host>[a-z0-9][a-z0-9.-]*\.[a-z]{2,})(?:.s)? (?:tls |ssl )?cert(?:ificate)? expire']
+expect = '"verdict"'
+
+[[actions]]
+name = "resolve"
+title = "What a name resolves to"
+script = "resolve"
+match = ['(?:what|which) (?:ip|address(?:es)?) (?:does|is) (?<name>[a-z0-9][a-z0-9.-]*\.[a-z]{2,}) (?:resolve to|at)', 'does (?<name>[a-z0-9][a-z0-9.-]*\.[a-z]{2,}) resolve']
+expect = '"verdict"'

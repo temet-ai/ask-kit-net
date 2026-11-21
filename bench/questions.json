@@ -1,0 +1,17 @@
+{
+  "about": "Kinds of network question a coding session asks: does a name resolve, does a host and port answer, what does a URL return, when does a certificate expire and who issued it, why can something not be reached. The model questions (`q`) use only things that stay true: example.com and github.com (public, checked on 2026-11-21), localhost port 1 (nothing listens there), and two certificate files in bench/fixture (made for this bench: a certificate for watch.example.com signed by a private CA, and an expired self-signed one; both asked about at the fixed date 2026-06-01 so the calendar does not change the answer). The shots (`do`) run with no model: selftest starts a throwaway server on loopback inside the run and stops it. Questions that need the internet fail on a machine with none. The expectations were checked against the kit's output on 2026-11-21. The model questions have not been run on a model.",
+  "questions": [
+    { "id": "resolve-public", "q": "Does example.com resolve from this machine, and does anything answer on port 443 there?", "expect": ["resolves", "443", "answers|open|reachable"] },
+    { "id": "url-status", "q": "What does https://example.com return: the status, and what is the page title?", "expect": ["200", "Example Domain"] },
+    { "id": "redirect-chain", "q": "Where does http://github.com redirect to, and with which status?", "expect": ["301", "https://github.com"] },
+    { "id": "unreachable-local", "q": "Why can't I reach http://localhost:1/ ?", "expect": ["refused|ECONNREFUSED", "tcp|nothing (is )?listen"] },
+    { "id": "cert-expired", "q": "In bench/fixture/expired.pem, is the certificate valid at 2026-06-01? Who issued it and when did it expire?", "expect": ["expired", "2025-01-01", "self-signed|treacle-mine-road"] },
+    { "id": "cert-private-ca", "q": "In bench/fixture/watch.pem, which names does the certificate cover, who issued it, and when does it expire?", "expect": ["watch\\.example\\.com", "Ankh-Morpork City Watch CA", "2027-04-01"] },
+    { "id": "resolve-shot", "do": "resolve", "params": { "name": "no-such-name.invalid" }, "expect": ["does not resolve", "\"system\""] },
+    { "id": "reach-shot", "do": "reach", "params": { "host": "localhost", "port": 1 }, "expect": ["does not answer", "ECONNREFUSED", "\"open\": false"] },
+    { "id": "why-shot", "do": "why", "params": { "target": "localhost:1" }, "expect": ["fails at tcp", "\"failedAt\": \"tcp\"", "procs kit"] },
+    { "id": "cert-shot", "do": "cert", "params": { "file": "bench/fixture/expired.pem", "now": "2026-06-01" }, "expect": ["expired 516 days ago", "\"selfSigned\": true", "\"expired\": true"] },
+    { "id": "cert-chain-shot", "do": "cert", "params": { "file": "bench/fixture/watch-chain.pem", "now": "2026-06-01" }, "expect": ["Ankh-Morpork City Watch CA", "\"daysLeft\": 304", "root is not in this machine's trust store"] },
+    { "id": "selftest-shot", "do": "selftest", "expect": ["loopback requests work", "/moved 200 after 1 redirect", "/nothing 404", "/hang timed out \\(ETIMEDOUT\\)", "sid=<redacted>", "\"stopped\": true"] }
+  ]
+}
